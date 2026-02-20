@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Cairo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "MTF Screener MA Cross System | InfinityAlgo Academy",
@@ -8,7 +16,7 @@ export const metadata: Metadata = {
   keywords: ["MTF Screener", "MA Cross System", "Trading Indicator", "MT4", "MT5", "TradingView", "Moving Average", "Multi-timeframe Analysis", "InfinityAlgo"],
   authors: [{ name: "InfinityAlgo Academy" }],
   icons: {
-    icon: "https://infinityalgoacademy.net/wp-content/uploads/2025/06/cropped-cropped-photo_2025-06-04_18-26-58-1-32x32.jpg",
+    icon: "/favicon.ico",
   },
   openGraph: {
     title: "MTF Screener MA Cross System | InfinityAlgo Academy",
@@ -18,9 +26,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://infinityalgoacademy.net/wp-content/uploads/2026/02/MTF-Screener-MA-Cross-System-.png",
-        width: 1962,
-        height: 965,
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
       }
     ],
   },
@@ -28,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "MTF Screener MA Cross System",
     description: "Professional multi-timeframe analytical framework for trading.",
-    images: ["https://infinityalgoacademy.net/wp-content/uploads/2026/02/MTF-Screener-MA-Cross-System-.png"],
+    images: ["/og-image.png"],
   },
 };
 
@@ -38,8 +46,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased bg-white text-slate-900">
+    <html lang="en" suppressHydrationWarning className={cairo.variable}>
+      <body className={`${cairo.className} antialiased bg-white text-slate-900`}>
         {children}
         <Toaster />
       </body>

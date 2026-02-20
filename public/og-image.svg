@@ -1,0 +1,21 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="url(#oggradient)"/>
+  <defs>
+    <linearGradient id="oggradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="1000" height="430" rx="30" fill="#ffffff" fill-opacity="0.1" stroke="#ffffff" stroke-opacity="0.3"/>
+  <circle cx="600" cy="250" r="80" fill="url(#iconGradient)"/>
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <path d="M560 250 L590 230 L620 260 L650 220 L680 240" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M560 280 L590 300 L620 270 L650 310 L680 290" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="600" y="400" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">MTF Screener MA Cross System</text>
+  <text x="600" y="460" font-family="Arial, sans-serif" font-size="28" fill="white" fill-opacity="0.8" text-anchor="middle">Professional Multi-Timeframe Trading Analysis</text>
+</svg>

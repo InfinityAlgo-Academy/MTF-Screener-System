@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { 
   ChevronDown, 
   Menu, 
@@ -497,18 +498,20 @@ export default function Home() {
           {/* Image */}
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-emerald-500/20 rounded-3xl blur-3xl" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
-              <img
-                src="https://infinityalgoacademy.net/wp-content/uploads/2026/02/MTF-Screener-MA-Cross-System-.png"
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-gradient-to-br from-slate-800 to-slate-900 aspect-video flex items-center justify-center">
+              <Image
+                src="/product-image.svg"
                 alt="MTF Screener MA Cross System"
-                className="w-full h-auto"
+                fill
+                className="object-cover"
+                priority
               />
               {/* Floating badges */}
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 z-10">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                 <span className="text-sm font-medium text-slate-700">Live Signals</span>
               </div>
-              <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+              <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 z-10">
                 <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                 <span className="text-sm font-medium text-slate-700">4.9 Rating</span>
               </div>
