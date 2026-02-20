@@ -622,7 +622,7 @@ export default function Home() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <a
-                href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=de05735c4ae7b61ad832534e01e5cc59"
+                href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=cbe46016bc462ddc1ecea7b198ccc756"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all"
@@ -1203,7 +1203,7 @@ export default function Home() {
             </ul>
             
             <a
-              href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=de05735c4ae7b61ad832534e01e5cc59"
+              href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=cbe46016bc462ddc1ecea7b198ccc756"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full text-center px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
@@ -1329,7 +1329,7 @@ export default function Home() {
             <a
               href={orderBumpChecked 
                 ? "https://infinityalgoacademy.net/checkout/?fct_cart_hash=cbe46016bc462ddc1ecea7b198ccc756"
-                : "https://infinityalgoacademy.net/checkout/?fct_cart_hash=de05735c4ae7b61ad832534e01e5cc59"
+                : "https://infinityalgoacademy.net/checkout/?fct_cart_hash=cbe46016bc462ddc1ecea7b198ccc756"
               }
               target="_blank"
               rel="noopener noreferrer"
@@ -1554,7 +1554,7 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=de05735c4ae7b61ad832534e01e5cc59"
+            href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=cbe46016bc462ddc1ecea7b198ccc756"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-blue-600 font-bold text-lg hover:bg-blue-50 transition-all"
