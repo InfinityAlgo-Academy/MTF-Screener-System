@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import Image from 'next/image'
 import { 
   ChevronDown, 
@@ -9,40 +9,43 @@ import {
   Check, 
   Star, 
   Download, 
-  Zap, 
   Shield, 
   TrendingUp, 
-  Clock, 
   Globe, 
   MessageSquare, 
   ArrowRight, 
-  Play, 
   Mail, 
-  Phone, 
-  MapPin, 
   Twitter, 
   Youtube, 
   Send,
-  AlertTriangle,
   BookOpen,
   Settings,
-  Users,
   Target,
-  BarChart3,
   Bell,
-  RefreshCw,
   Layers,
   Activity,
-  ChevronRight,
   CreditCard,
   Lock,
   Gift,
   Timer,
   CheckCircle2,
-  Info,
-  HelpCircle,
-  FileText,
-  Terminal
+  Terminal,
+  RefreshCw,
+  Play,
+  Sparkles,
+  Award,
+  Users,
+  Zap,
+  Heart,
+  Eye,
+  BarChart3,
+  PieChart,
+  TrendingDown,
+  LineChart,
+  CandlestickChart,
+  Coins,
+  Wallet,
+  Rocket
 } from 'lucide-react'
 
 // Types
@@ -329,21 +332,13 @@ const translations = {
   }
 }
 
-export default function Home() {
-  const [currentPage, setCurrentPage] = useState<Page>('home')
-  const [language, setLanguage] = useState<Language>('en')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [orderBumpChecked, setOrderBumpChecked] = useState(false)
-  const [countdown, setCountdown] = useState({ hours: 23, minutes: 59, seconds: 59 })
-  const [activeDocSection, setActiveDocSection] = useState('overview')
+// Separate Countdown Component - won't cause parent re-renders
+const CountdownTimer = memo(({ language }: { language: Language }) => {
+  const [time, setTime] = useState({ hours: 23, minutes: 59, seconds: 59 })
 
-  const t = translations[language]
-  const isRTL = language === 'ar'
-
-  // Countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown(prev => {
+      setTime(prev => {
         if (prev.seconds > 0) {
           return { ...prev, seconds: prev.seconds - 1 }
         } else if (prev.minutes > 0) {
@@ -357,17 +352,175 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
-  const getIcon = (iconName: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      layers: <Layers className="w-6 h-6" />,
-      shield: <Shield className="w-6 h-6" />,
-      bell: <Bell className="w-6 h-6" />,
-      target: <Target className="w-6 h-6" />,
-      activity: <Activity className="w-6 h-6" />,
-      settings: <Settings className="w-6 h-6" />
-    }
-    return icons[iconName] || <Star className="w-6 h-6" />
+  return (
+    <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-4 mb-8 text-center text-white">
+      <div className="flex items-center justify-center gap-2 mb-2">
+        <Timer className="w-5 h-5" />
+        <span className="font-semibold">
+          {language === 'en' ? 'Limited Time Offer - Expires Soon!' : 'عرض لفترة محدودة - ينتهي قريباً!'}
+        </span>
+      </div>
+      <div className="flex items-center justify-center gap-4 text-3xl font-bold font-mono">
+        <div className="bg-white/20 rounded-lg px-3 py-1">
+          {String(time.hours).padStart(2, '0')}
+        </div>
+        <span>:</span>
+        <div className="bg-white/20 rounded-lg px-3 py-1">
+          {String(time.minutes).padStart(2, '0')}
+        </div>
+        <span>:</span>
+        <div className="bg-white/20 rounded-lg px-3 py-1">
+          {String(time.seconds).padStart(2, '0')}
+        </div>
+      </div>
+    </div>
+  )
+})
+CountdownTimer.displayName = 'CountdownTimer'
+
+// FAQ Item Component with controlled state
+const FAQItem = memo(({ 
+  question, 
+  answer, 
+  isOpen, 
+  onToggle 
+}: { 
+  question: string
+  answer: string
+  isOpen: boolean
+  onToggle: () => void
+}) => (
+  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <button
+      onClick={onToggle}
+      className="flex items-center justify-between w-full p-4 text-left hover:bg-slate-50 transition-colors"
+    >
+      <span className="font-medium text-slate-900 pr-4">{question}</span>
+      <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+    </button>
+    {isOpen && (
+      <div className="px-4 pb-4 text-slate-600 border-t border-slate-100">
+        <p className="pt-4">{answer}</p>
+      </div>
+    )}
+  </div>
+))
+FAQItem.displayName = 'FAQItem'
+
+// Icon mapping
+const getIcon = (iconName: string) => {
+  const icons: Record<string, React.ReactNode> = {
+    layers: <Layers className="w-6 h-6" />,
+    shield: <Shield className="w-6 h-6" />,
+    bell: <Bell className="w-6 h-6" />,
+    target: <Target className="w-6 h-6" />,
+    activity: <Activity className="w-6 h-6" />,
+    settings: <Settings className="w-6 h-6" />
   }
+  return icons[iconName] || <Star className="w-6 h-6" />
+}
+
+export default function Home() {
+  const [currentPage, setCurrentPage] = useState<Page>('home')
+  const [language, setLanguage] = useState<Language>('en')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [orderBumpChecked, setOrderBumpChecked] = useState(false)
+  const [activeDocSection, setActiveDocSection] = useState('overview')
+  const [openFAQIndex, setOpenFAQIndex] = useState<number | null>(null)
+
+  const t = translations[language]
+  const isRTL = language === 'ar'
+
+  // FAQ data
+  const faqData = useMemo(() => [
+    {
+      q: language === 'en' ? 'What is MTF Screener MA Cross System?' : 'ما هو نظام MTF Screener MA Cross؟',
+      a: language === 'en' 
+        ? 'MTF Screener MA Cross System is a professional multi-timeframe analytical framework that integrates moving average cross logic, higher timeframe context, risk modeling, and multi-symbol monitoring within a unified interface. It allows traders to monitor multiple timeframes and symbols simultaneously, providing a comprehensive view of market conditions and potential trading opportunities.'
+        : 'نظام MTF Screener MA Cross هو إطار تحليل احترافي متعدد الأطر الزمنية يدمج منطق تقاطع المتوسطات المتحركة وسياق الإطار الزمني الأعلى ونمذجة المخاطر ومراقبة الرموز المتعددة في واجهة موحدة. يسمح للمتداولين بمراقبة أطر زمنية ورموز متعددة في وقت واحد.'
+    },
+    {
+      q: language === 'en' ? 'What timeframes are supported?' : 'ما هي الأطر الزمنية المدعومة؟',
+      a: language === 'en'
+        ? 'The system supports all standard timeframes from M1 (1-minute) to MN (Monthly). You can customize which timeframes to monitor based on your trading strategy. The recommended setup includes monitoring 3-4 timeframes for optimal signal confirmation, such as H1, H4, and D1 for swing trading, or M5, M15, and H1 for day trading.'
+        : 'يدعم النظام جميع الأطر الزمنية القياسية من M1 (دقيقة واحدة) إلى MN (شهري). يمكنك تخصيص الأطر الزمنية التي تريد مراقبتها بناءً على استراتيجية التداول الخاصة بك. يتضمن الإعداد الموصى به مراقبة 3-4 أطر زمنية.'
+    },
+    {
+      q: language === 'en' ? 'Does the indicator repaint?' : 'هل يعيد المؤشر الرسم؟',
+      a: language === 'en'
+        ? 'No, the MTF Screener MA Cross System does NOT repaint. All signals are confirmed and finalized before being displayed. This is one of our core principles - reliability. When a signal appears, it stays. This ensures that historical performance matches real-time trading results, giving you confidence in your backtesting and live trading.'
+        : 'لا، لا يعيد نظام MTF Screener MA Cross الرسم. جميع الإشارات مؤكدة ومنتهية قبل عرضها. هذه واحدة من مبادئنا الأساسية - الموثوقية. عندما تظهر إشارة، تبقى. هذا يضمن أن الأداء التاريخي يطابق نتائج التداول الفورية.'
+    },
+    {
+      q: language === 'en' ? 'What trading platforms are supported?' : 'ما هي منصات التداول المدعومة؟',
+      a: language === 'en'
+        ? 'The MTF Screener MA Cross System is available for MetaTrader 4 (MT4), MetaTrader 5 (MT5), TradingView, and NinjaTrader. Each version is optimized for its respective platform, taking full advantage of native features and capabilities.'
+        : 'نظام MTF Screener MA Cross متاح لـ MetaTrader 4 (MT4) و MetaTrader 5 (MT5) و TradingView و NinjaTrader. كل نسخة محسّنة لمنصتها الخاصة.'
+    },
+    {
+      q: language === 'en' ? 'How accurate are the signals?' : 'ما مدى دقة الإشارات؟',
+      a: language === 'en'
+        ? 'The system provides high-probability signals based on proven moving average cross methodology combined with multi-timeframe confluence. While no trading system can guarantee profits, our users report an average win rate of 75-85% when following proper risk management.'
+        : 'يوفر النظام إشارات عالية الاحتمال بناءً على منهجية تقاطع المتوسطات المتحركة المثبتة مجتمعة مع توافق الأطر الزمنية المتعددة. يبلغ متوسط معدل الفوز 75-85% عند اتباع إدارة المخاطر السليمة.'
+    },
+    {
+      q: language === 'en' ? 'Can I use it for any financial instrument?' : 'هل يمكنني استخدامه لأي أداة مالية؟',
+      a: language === 'en'
+        ? 'Yes! The MTF Screener works with any financial instrument available on your trading platform - Forex pairs, stocks, indices, commodities, cryptocurrencies, and more. The indicator automatically adapts to the characteristics of each instrument.'
+        : 'نعم! يعمل MTF Screener مع أي أداة مالية متاحة على منصة التداول الخاصة بك - أزواج الفوركس والأسهم والمؤشرات والسلع والعملات المشفرة والمزيد.'
+    },
+    {
+      q: language === 'en' ? 'How many symbols can I monitor simultaneously?' : 'كم عدد الرموز التي يمكنني مراقبتها في وقت واحد؟',
+      a: language === 'en'
+        ? 'The multi-symbol scanner can monitor up to 30 symbols simultaneously in the MT4/MT5 version, and unlimited symbols in TradingView. The scanner displays real-time signal status for each symbol.'
+        : 'يمكن للماسح متعدد الرموز مراقبة ما يصل إلى 30 رمزاً في وقت واحد في نسخة MT4/MT5، ورموز غير محدودة في TradingView.'
+    },
+    {
+      q: language === 'en' ? 'What are the alert options?' : 'ما هي خيارات التنبيه؟',
+      a: language === 'en'
+        ? 'The system supports multiple alert types: on-screen pop-up alerts, mobile push notifications (MT4/MT5 mobile app), email alerts, and sound alerts. You can configure alerts for different signal types.'
+        : 'يدعم النظام أنواعاً متعددة من التنبيهات: تنبيهات منبثقة على الشاشة وإشعات دفع للهاتف المحمول وتنبيهات البريد الإلكتروني وتنبيهات صوتية.'
+    },
+    {
+      q: language === 'en' ? 'Is there customer support available?' : 'هل يوجد دعم للعملاء؟',
+      a: language === 'en'
+        ? 'Yes, we provide comprehensive customer support via email. Our team typically responds within 24 hours on business days. We also provide detailed documentation, video tutorials, and a community forum.'
+        : 'نعم، نحن نقدم دعم عملاء شامل عبر البريد الإلكتروني. يستجيب فريقنا عادةً خلال 24 ساعة في أيام العمل.'
+    },
+    {
+      q: language === 'en' ? 'Can beginners use this indicator?' : 'هل يمكن للمبتدئين استخدام هذا المؤشر؟',
+      a: language === 'en'
+        ? 'Absolutely! The MTF Screener is designed to be user-friendly with clear visual signals and comprehensive documentation. Beginners can start with default settings and gradually explore advanced features.'
+        : 'بالتأكيد! صُمم MTF Screener ليكون سهل الاستخدام مع إشارات بصرية واضحة وتوثيق شامل.'
+    },
+    {
+      q: language === 'en' ? 'Are there any recurring fees?' : 'هل هناك رسوم متكررة؟',
+      a: language === 'en'
+        ? 'No! The MTF Screener MA Cross System is completely FREE with no hidden fees, subscriptions, or recurring charges. You get lifetime access to the indicator including all future updates at no additional cost.'
+        : 'لا! نظام MTF Screener MA Cross مجاني تماماً بدون رسوم خفية أو اشتراكات أو رسوم متكررة.'
+    },
+    {
+      q: language === 'en' ? 'How do I install the indicator?' : 'كيف أقوم بتثبيت المؤشر؟',
+      a: language === 'en'
+        ? 'Installation is simple: Download the indicator file from your member area, open MT4/MT5, go to File > Open Data Folder, navigate to MQL4/5 > Indicators, paste the file, restart MT4/MT5 or refresh the navigator, then drag the indicator onto your chart.'
+        : 'التثبيت بسيط: قم بتنزيل ملف المؤشر، افتح MT4/MT5، انتقل إلى ملف > فتح مجلد البيانات، انتقل إلى MQL4/5 > المؤشرات، الصق الملف.'
+    }
+  ], [language])
+
+  // Navigation handler
+  const handleNavClick = useCallback((page: Page) => {
+    setCurrentPage(page)
+    setMobileMenuOpen(false)
+    if (page === 'docs') {
+      setActiveDocSection('overview')
+      setOpenFAQIndex(null)
+    }
+  }, [])
+
+  // Toggle FAQ
+  const toggleFAQ = useCallback((index: number) => {
+    setOpenFAQIndex(prev => prev === index ? null : index)
+  }, [])
 
   // Header Component
   const header = useMemo(() => (
@@ -375,19 +528,22 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <button 
+            onClick={() => handleNavClick('home')}
+            className="flex items-center gap-3 cursor-pointer"
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-900">InfinityAlgo</span>
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {(['home', 'features', 'docs', 'pricing', 'checkout', 'contact'] as Page[]).map((page) => (
               <button
                 key={page}
-                onClick={() => setCurrentPage(page)}
+                onClick={() => handleNavClick(page)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   currentPage === page
                     ? 'bg-blue-50 text-blue-600'
@@ -423,10 +579,7 @@ export default function Home() {
             {(['home', 'features', 'docs', 'pricing', 'checkout', 'contact'] as Page[]).map((page) => (
               <button
                 key={page}
-                onClick={() => {
-                  setCurrentPage(page)
-                  setMobileMenuOpen(false)
-                }}
+                onClick={() => handleNavClick(page)}
                 className={`block w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   currentPage === page
                     ? 'bg-blue-50 text-blue-600'
@@ -440,7 +593,7 @@ export default function Home() {
         )}
       </div>
     </header>
-  ), [currentPage, language, mobileMenuOpen])
+  ), [currentPage, language, mobileMenuOpen, t.nav, handleNavClick])
 
   // Hero Section
   const HeroSection = () => (
@@ -470,13 +623,15 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <a
                 href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=233d13bd84042877178c480d6eea2693"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all"
               >
                 <Download className="w-5 h-5" />
                 {t.hero.cta}
               </a>
               <button
-                onClick={() => setCurrentPage('docs')}
+                onClick={() => handleNavClick('docs')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-slate-700 font-semibold border-2 border-slate-200 hover:border-blue-300 hover:text-blue-600 transition-all"
               >
                 <BookOpen className="w-5 h-5" />
@@ -509,7 +664,7 @@ export default function Home() {
               />
               {/* Floating badges */}
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 z-10">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                 <span className="text-sm font-medium text-slate-700">Live Signals</span>
               </div>
               <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 z-10">
@@ -576,119 +731,117 @@ export default function Home() {
     </section>
   )
 
-  // Documentation Section
-  const DocsSection = () => {
-    const faqItems = [
-      {
-        q: language === 'en' ? 'What is MTF Screener MA Cross System?' : 'ما هو نظام MTF Screener MA Cross؟',
-        a: language === 'en' 
-          ? 'MTF Screener MA Cross System is a professional multi-timeframe analytical framework that integrates moving average cross logic, higher timeframe context, risk modeling, and multi-symbol monitoring within a unified interface. It allows traders to monitor multiple timeframes and symbols simultaneously, providing a comprehensive view of market conditions and potential trading opportunities.'
-          : 'نظام MTF Screener MA Cross هو إطار تحليل احترافي متعدد الأطر الزمنية يدمج منطق تقاطع المتوسطات المتحركة وسياق الإطار الزمني الأعلى ونمذجة المخاطر ومراقبة الرموز المتعددة في واجهة موحدة. يسمح للمتداولين بمراقبة أطر زمنية ورموز متعددة في وقت واحد.'
-      },
-      {
-        q: language === 'en' ? 'What timeframes are supported?' : 'ما هي الأطر الزمنية المدعومة؟',
-        a: language === 'en'
-          ? 'The system supports all standard timeframes from M1 (1-minute) to MN (Monthly). You can customize which timeframes to monitor based on your trading strategy. The recommended setup includes monitoring 3-4 timeframes for optimal signal confirmation, such as H1, H4, and D1 for swing trading, or M5, M15, and H1 for day trading.'
-          : 'يدعم النظام جميع الأطر الزمنية القياسية من M1 (دقيقة واحدة) إلى MN (شهري). يمكنك تخصيص الأطر الزمنية التي تريد مراقبتها بناءً على استراتيجية التداول الخاصة بك. يتضمن الإعداد الموصى به مراقبة 3-4 أطر زمنية.'
-      },
-      {
-        q: language === 'en' ? 'Does the indicator repaint?' : 'هل يعيد المؤشر الرسم؟',
-        a: language === 'en'
-          ? 'No, the MTF Screener MA Cross System does NOT repaint. All signals are confirmed and finalized before being displayed. This is one of our core principles - reliability. When a signal appears, it stays. This ensures that historical performance matches real-time trading results, giving you confidence in your backtesting and live trading.'
-          : 'لا، لا يعيد نظام MTF Screener MA Cross الرسم. جميع الإشارات مؤكدة ومنتهية قبل عرضها. هذه واحدة من مبادئنا الأساسية - الموثوقية. عندما تظهر إشارة، تبقى. هذا يضمن أن الأداء التاريخي يطابق نتائج التداول الفورية.'
-      },
-      {
-        q: language === 'en' ? 'What trading platforms are supported?' : 'ما هي منصات التداول المدعومة؟',
-        a: language === 'en'
-          ? 'The MTF Screener MA Cross System is available for MetaTrader 4 (MT4), MetaTrader 5 (MT5), TradingView, and NinjaTrader. Each version is optimized for its respective platform, taking full advantage of native features and capabilities. You can use the same indicator across multiple platforms with consistent functionality.'
-          : 'نظام MTF Screener MA Cross متاح لـ MetaTrader 4 (MT4) و MetaTrader 5 (MT5) و TradingView و NinjaTrader. كل نسخة محسّنة لمنصتها الخاصة، مستفيدة بالكامل من الميزات والقدرات الأصلية.'
-      },
-      {
-        q: language === 'en' ? 'How accurate are the signals?' : 'ما مدى دقة الإشارات؟',
-        a: language === 'en'
-          ? 'The system provides high-probability signals based on proven moving average cross methodology combined with multi-timeframe confluence. While no trading system can guarantee profits, our users report an average win rate of 75-85% when following proper risk management. The key advantage is the multi-timeframe confirmation which significantly filters out false signals.'
-          : 'يوفر النظام إشارات عالية الاحتمال بناءً على منهجية تقاطع المتوسطات المتحركة المثبتة مجتمعة مع توافق الأطر الزمنية المتعددة. يبلغ متوسط معدل الفوز 75-85% عند اتباع إدارة المخاطر السليمة.'
-      },
-      {
-        q: language === 'en' ? 'Can I use it for any financial instrument?' : 'هل يمكنني استخدامه لأي أداة مالية؟',
-        a: language === 'en'
-          ? 'Yes! The MTF Screener works with any financial instrument available on your trading platform - Forex pairs, stocks, indices, commodities, cryptocurrencies, and more. The indicator automatically adapts to the characteristics of each instrument. For best results, we recommend using it on liquid markets with consistent price action patterns.'
-          : 'نعم! يعمل MTF Screener مع أي أداة مالية متاحة على منصة التداول الخاصة بك - أزواج الفوركس والأسهم والمؤشرات والسلع والعملات المشفرة والمزيد. يتكيف المؤشر تلقائياً مع خصائص كل أداة.'
-      },
-      {
-        q: language === 'en' ? 'How many symbols can I monitor simultaneously?' : 'كم عدد الرموز التي يمكنني مراقبتها في وقت واحد؟',
-        a: language === 'en'
-          ? 'The multi-symbol scanner can monitor up to 30 symbols simultaneously in the MT4/MT5 version, and unlimited symbols in TradingView. The scanner displays real-time signal status for each symbol, allowing you to quickly identify trading opportunities across your entire watchlist without switching between charts.'
-          : 'يمكن للماسح متعدد الرموز مراقبة ما يصل إلى 30 رمزاً في وقت واحد في نسخة MT4/MT5، ورموز غير محدودة في TradingView. يعرض الماسح حالة الإشارة في الوقت الفعلي لكل رمز.'
-      },
-      {
-        q: language === 'en' ? 'What are the alert options?' : 'ما هي خيارات التنبيه؟',
-        a: language === 'en'
-          ? 'The system supports multiple alert types: on-screen pop-up alerts, mobile push notifications (MT4/MT5 mobile app), email alerts, and sound alerts. You can configure alerts for different signal types - new crosses, trend changes, or specific multi-timeframe confluence setups. Alerts can be customized per symbol and timeframe.'
-          : 'يدعم النظام أنواعاً متعددة من التنبيهات: تنبيهات منبثقة على الشاشة وإشعات دفع للهاتف المحمول وتنبيهات البريد الإلكتروني وتنبيهات صوتية. يمكنك تكوين التنبيهات لأنواع مختلفة من الإشارات.'
-      },
-      {
-        q: language === 'en' ? 'What moving average types are used?' : 'ما هي أنواع المتوسطات المتحركة المستخدمة؟',
-        a: language === 'en'
-          ? 'The indicator supports multiple MA types including Simple Moving Average (SMA), Exponential Moving Average (EMA), Smoothed Moving Average (SMMA), and Linear Weighted Moving Average (LWMA). The default setup uses EMA for its responsiveness to recent price changes while maintaining smooth signal generation.'
-          : 'يدعم المؤشر أنواعاً متعددة من MA بما في ذلك المتوسط المتحرك البسيط (SMA) والمتوسط المتحرك الأسي (EMA) والمتوسط المتحرك المُنعم (SMMA) والمتوسط المتحرك الخطي الموزون (LWMA).'
-      },
-      {
-        q: language === 'en' ? 'Is there customer support available?' : 'هل يوجد دعم للعملاء؟',
-        a: language === 'en'
-          ? 'Yes, we provide comprehensive customer support via email. Our team typically responds within 24 hours on business days. We also provide detailed documentation, video tutorials, and a community forum where you can connect with other users and share strategies. Premium support options are available for urgent matters.'
-          : 'نعم، نحن نقدم دعم عملاء شامل عبر البريد الإلكتروني. يستجيب فريقنا عادةً خلال 24 ساعة في أيام العمل. كما نقدم توثيقاً تفصيلياً ودروس فيديو ومنتدى مجتمعي.'
-      },
-      {
-        q: language === 'en' ? 'Can beginners use this indicator?' : 'هل يمكن للمبتدئين استخدام هذا المؤشر؟',
-        a: language === 'en'
-          ? 'Absolutely! The MTF Screener is designed to be user-friendly with clear visual signals and comprehensive documentation. Beginners can start with default settings and gradually explore advanced features. The documentation includes step-by-step tutorials, recommended settings for different trading styles, and example strategies to get started quickly.'
-          : 'بالتأكيد! صُمم MTF Screener ليكون سهل الاستخدام مع إشارات بصرية واضحة وتوثيق شامل. يمكن للمبتدئين البدء بالإعدادات الافتراضية واستكشاف الميزات المتقدمة تدريجياً.'
-      },
-      {
-        q: language === 'en' ? 'What is the recommended account size?' : 'ما هو حجم الحساب الموصى به؟',
-        a: language === 'en'
-          ? 'The indicator works with any account size. The built-in risk management tools help you calculate appropriate position sizes based on your account balance and risk tolerance. We recommend starting with proper risk management (1-2% per trade) regardless of account size. The indicator\'s lot size calculator helps maintain consistent risk across all trades.'
-          : 'يعمل المؤشر مع أي حجم حساب. تساعدك أدوات إدارة المخاطر المدمجة على حساب أحجام المراكز المناسبة بناءً على رصيد حسابك وتحملك للمخاطرة. نوصي بالبدء بإدارة مخاطر مناسبة (1-2% لكل صفقة).'
-      },
-      {
-        q: language === 'en' ? 'Are there any recurring fees?' : 'هل هناك رسوم متكررة؟',
-        a: language === 'en'
-          ? 'No! The MTF Screener MA Cross System is completely FREE with no hidden fees, subscriptions, or recurring charges. You get lifetime access to the indicator including all future updates at no additional cost. We believe in providing value to traders without ongoing costs that eat into your trading profits.'
-          : 'لا! نظام MTF Screener MA Cross مجاني تماماً بدون رسوم خفية أو اشتراكات أو رسوم متكررة. تحصل على وصول مدى الحياة للمؤشر بما في ذلك جميع التحديثات المستقبلية بدون تكلفة إضافية.'
-      },
-      {
-        q: language === 'en' ? 'How do I install the indicator?' : 'كيف أقوم بتثبيت المؤشر؟',
-        a: language === 'en'
-          ? 'Installation is simple: Download the indicator file from your member area, open MT4/MT5, go to File > Open Data Folder, navigate to MQL4/5 > Indicators, paste the file, restart MT4/MT5 or refresh the navigator, then drag the indicator onto your chart. Detailed video tutorials are available in the documentation section.'
-          : 'التثبيت بسيط: قم بتنزيل ملف المؤشر، افتح MT4/MT5، انتقل إلى ملف > فتح مجلد البيانات، انتقل إلى MQL4/5 > المؤشرات، الصق الملف، أعد تشغيل MT4/MT5 أو قم بتحديث المتصفح، ثم اسحب المؤشر إلى الرسم البياني الخاص بك.'
-      },
-      {
-        q: language === 'en' ? 'Can I customize the visual appearance?' : 'هل يمكنني تخصيص المظهر المرئي؟',
-        a: language === 'en'
-          ? 'Yes, the indicator offers extensive customization options. You can change colors, line styles, signal marker sizes, panel positions, and opacity. Create a setup that matches your chart theme and personal preferences. Colors can be set separately for bullish and bearish signals, and panel transparency is adjustable to not obstruct price action.'
-          : 'نعم، يقدم المؤشر خيارات تخصيص واسعة. يمكنك تغيير الألوان وأنماط الخطوط وأحجام علامات الإشارة ومواضع اللوحة والشفافية. أنشئ إعداداً يطابق موضوع الرسم البياني وتفضيلاتك الشخصية.'
-      },
-      {
-        q: language === 'en' ? 'Does it work with Expert Advisors (EAs)?' : 'هل يعمل مع الروبوتات (EAs)؟',
-        a: language === 'en'
-          ? 'Yes, the indicator generates signals that can be read by Expert Advisors for automated trading. The buffer values are well-documented for developers who want to create custom EAs. Several compatible EAs are also available in our store that can automatically execute trades based on MTF Screener signals.'
-          : 'نعم، يولد المؤشر إشارات يمكن قراءتها بواسطة Expert Advisors للتداول الآلي. قيم المخزن المؤقت موثقة جيداً للمطورين الذين يرغبون في إنشاء EAs مخصصة.'
-      },
-      {
-        q: language === 'en' ? 'What if I have issues with the indicator?' : 'ماذا لو واجهت مشاكل مع المؤشر؟',
-        a: language === 'en'
-          ? 'Our support team is here to help. Common issues are usually resolved quickly through our troubleshooting guide in the documentation. For technical issues, contact support with your platform version, broker name, and a screenshot of the problem. We regularly release updates to address any reported issues and improve functionality.'
-          : 'فريق الدعم لدينا موجود للمساعدة. عادةً ما يتم حل المشاكل الشائعة بسرعة من خلال دليل استكشاف الأخطاء وإصلاحها في التوثيق. للمشاكل التقنية، تواصل مع الدعم مع إصدار منصتك واسم الوسيط ولقطة شاشة للمشكلة.'
-      },
-      {
-        q: language === 'en' ? 'Is there a money-back guarantee?' : 'هل يوجد ضمان استرداد الأموال؟',
-        a: language === 'en'
-          ? 'Since the MTF Screener is free, there\'s nothing to lose! For our premium add-ons like InfinityRSI Divergence, we offer a 30-day money-back guarantee. If you\'re not satisfied with your purchase, simply contact our support team within 30 days for a full refund - no questions asked. We stand behind the quality of our products.'
-          : 'بما أن MTF Screener مجاني، فلا شيء لتخسره! للإضافات المميزة لدينا مثل InfinityRSI Divergence، نقدم ضمان استرداد الأموال لمدة 30 يوماً. إذا لم تكن راضياً عن شرائك، ببساطة تواصل مع فريق الدعم خلال 30 يوماً لاسترداد كامل المبلغ.'
-      }
-    ]
+  // New Feature: Platform Showcase
+  const PlatformSection = () => (
+    <section className="py-20 bg-gradient-to-b from-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+            {language === 'en' ? 'Supported Platforms' : 'المنصات المدعومة'}
+          </h2>
+          <p className="text-lg text-slate-600">
+            {language === 'en' 
+              ? 'Works seamlessly across all major trading platforms'
+              : 'يعمل بسلاسة عبر جميع منصات التداول الرئيسية'}
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { name: 'MetaTrader 4', icon: <BarChart3 className="w-8 h-8" />, color: 'from-blue-500 to-blue-600' },
+            { name: 'MetaTrader 5', icon: <LineChart className="w-8 h-8" />, color: 'from-emerald-500 to-emerald-600' },
+            { name: 'TradingView', icon: <CandlestickChart className="w-8 h-8" />, color: 'from-purple-500 to-purple-600' },
+            { name: 'NinjaTrader', icon: <PieChart className="w-8 h-8" />, color: 'from-amber-500 to-amber-600' }
+          ].map((platform, index) => (
+            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center card-hover">
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white mx-auto mb-4`}>
+                {platform.icon}
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900">{platform.name}</h3>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 
+  // New Feature: Benefits Section
+  const BenefitsSection = () => (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">
+              {language === 'en' ? 'Why Choose Our System?' : 'لماذا تختار نظامنا؟'}
+            </h2>
+            <div className="space-y-6">
+              {[
+                { 
+                  icon: <Zap className="w-6 h-6" />, 
+                  title: language === 'en' ? 'Lightning Fast Signals' : 'إشارات فورية سريعة',
+                  desc: language === 'en' ? 'Get notified instantly when trading opportunities appear' : 'احصل على إشعار فوري عند ظهور فرص التداول'
+                },
+                { 
+                  icon: <Shield className="w-6 h-6" />, 
+                  title: language === 'en' ? 'Proven Reliability' : 'موثوقية مثبتة',
+                  desc: language === 'en' ? 'Non-repainting signals you can trust' : 'إشارات بدون إعادة رسم يمكنك الوثوق بها'
+                },
+                { 
+                  icon: <Users className="w-6 h-6" />, 
+                  title: language === 'en' ? 'Active Community' : 'مجتمع نشط',
+                  desc: language === 'en' ? 'Join thousands of successful traders' : 'انضم إلى آلاف المتداولين الناجحين'
+                },
+                { 
+                  icon: <Heart className="w-6 h-6" />, 
+                  title: language === 'en' ? 'Lifetime Updates' : 'تحديثات مدى الحياة',
+                  desc: language === 'en' ? 'Free updates forever, no subscription needed' : 'تحديثات مجانية للأبد، بدون اشتراك'
+                }
+              ].map((item, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-1">{item.title}</h3>
+                    <p className="text-slate-600">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="bg-gradient-to-br from-blue-600 to-emerald-500 rounded-3xl p-8 text-white">
+              <div className="flex items-center gap-4 mb-6">
+                <Award className="w-12 h-12" />
+                <div>
+                  <h3 className="text-2xl font-bold">
+                    {language === 'en' ? 'Award Winning' : 'حائز على جوائز'}
+                  </h3>
+                  <p className="text-white/80">
+                    {language === 'en' ? 'Best Trading Tool 2024' : 'أفضل أداة تداول 2024'}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/20 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold">15K+</div>
+                  <div className="text-sm text-white/80">{language === 'en' ? 'Users' : 'مستخدم'}</div>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold">98%</div>
+                  <div className="text-sm text-white/80">{language === 'en' ? 'Satisfaction' : 'رضا'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+
+  // Documentation Section with controlled state
+  const DocsSection = () => {
     const sections = {
       overview: (
         <div className="prose prose-lg max-w-none">
@@ -880,16 +1033,6 @@ export default function Home() {
                   <td className="px-6 py-4 text-slate-600">{language === 'en' ? 'Enable/disable all alerts' : 'تمكين/تعطيل جميع التنبيهات'}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 font-medium">Push_Alerts</td>
-                  <td className="px-6 py-4 text-slate-600">True</td>
-                  <td className="px-6 py-4 text-slate-600">{language === 'en' ? 'Send push notifications' : 'إرسال إشعات الدفع'}</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-medium">Email_Alerts</td>
-                  <td className="px-6 py-4 text-slate-600">False</td>
-                  <td className="px-6 py-4 text-slate-600">{language === 'en' ? 'Send email alerts' : 'إرسال تنبيهات البريد الإلكتروني'}</td>
-                </tr>
-                <tr>
                   <td className="px-6 py-4 font-medium">Risk_Percent</td>
                   <td className="px-6 py-4 text-slate-600">2.0</td>
                   <td className="px-6 py-4 text-slate-600">{language === 'en' ? 'Risk percentage per trade' : 'نسبة المخاطرة لكل صفقة'}</td>
@@ -918,7 +1061,7 @@ export default function Home() {
               </h4>
               <p className="text-slate-600 mb-4">
                 {language === 'en'
-                  ? 'Wait for all monitored timeframes to show the same trend direction. Enter when the lower timeframe MA cross confirms the higher timeframe trend. This provides high probability entries with strong trend alignment.'
+                  ? 'Wait for all monitored timeframes to show the same trend direction. Enter when the lower timeframe MA cross confirms the higher timeframe trend.'
                   : 'انتظر حتى تظهر جميع الأطر الزمنية المراقبة نفس اتجاه الاتجاه. ادخل عندما يؤكد تقاطع MA للإطار الزمني الأدنى اتجاه الإطار الزمني الأعلى.'}
               </p>
               <ul className="space-y-2 text-sm text-slate-600">
@@ -935,13 +1078,13 @@ export default function Home() {
               </h4>
               <p className="text-slate-600 mb-4">
                 {language === 'en'
-                  ? 'Identify strong trends on higher timeframes, then wait for pullbacks to key MA levels on lower timeframes. Enter when the shorter timeframe shows a cross in the direction of the main trend.'
+                  ? 'Identify strong trends on higher timeframes, then wait for pullbacks to key MA levels on lower timeframes.'
                   : 'حدد الاتجاهات القوية على الأطر الزمنية الأعلى، ثم انتظر الارتدادات إلى مستويات MA الرئيسية على الأطر الزمنية الأدنى.'}
               </p>
               <ul className="space-y-2 text-sm text-slate-600">
                 <li>• {language === 'en' ? 'Entry: Price pulls back to touch Slow MA, then Fast MA crosses up on M15' : 'الدخول: يرتد السعر ليلمس MA البطيء، ثم يتقاطع MA السريع لأعلى على M15'}</li>
                 <li>• {language === 'en' ? 'Stop Loss: Below the pullback low' : 'وقف الخسارة: تحت أدنى مستوى الارتداد'}</li>
-                <li>• {language === 'en' ? 'Take Profit: Next resistance level or previous swing high' : 'جني الأرباح: مستوى المقاومة التالي أو أعلى مستوى تأرجح سابق'}</li>
+                <li>• {language === 'en' ? 'Take Profit: Next resistance level' : 'جني الأرباح: مستوى المقاومة التالي'}</li>
               </ul>
             </div>
 
@@ -952,13 +1095,13 @@ export default function Home() {
               </h4>
               <p className="text-slate-600 mb-4">
                 {language === 'en'
-                  ? 'This is the most powerful approach - wait for simultaneous MA cross signals on multiple timeframes. The more timeframes showing aligned signals, the stronger the trade setup.'
-                  : 'هذا هو النهج الأقوى - انتظر إشارات تقاطع MA متزامنة على أطر زمنية متعددة. كلما زادت الأطر الزمنية التي تظهر إشارات متوافقة، زادت قوة إعداد الصفقة.'}
+                  ? 'Wait for simultaneous MA cross signals on multiple timeframes. The more timeframes showing aligned signals, the stronger the trade setup.'
+                  : 'انتظر إشارات تقاطع MA متزامنة على أطر زمنية متعددة. كلما زادت الأطر الزمنية التي تظهر إشارات متوافقة، زادت قوة إعداد الصفقة.'}
               </p>
               <ul className="space-y-2 text-sm text-slate-600">
                 <li>• {language === 'en' ? 'Entry: Bullish cross on M15, H1, AND H4 within 1-2 candles' : 'الدخول: تقاطع صاعد على M15 و H1 و H4 خلال 1-2 شموع'}</li>
                 <li>• {language === 'en' ? 'Stop Loss: Below the cross formation' : 'وقف الخسارة: تحت تكوين التقاطع'}</li>
-                <li>• {language === 'en' ? 'Take Profit: 3-5x risk due to high probability' : 'جني الأرباح: 3-5 أضعاف المخاطرة نظراً للاحتمالية العالية'}</li>
+                <li>• {language === 'en' ? 'Take Profit: 3-5x risk due to high probability' : 'جني الأرباح: 3-5 أضعاف المخاطرة'}</li>
               </ul>
             </div>
           </div>
@@ -971,16 +1114,14 @@ export default function Home() {
           </h3>
           
           <div className="space-y-4">
-            {faqItems.map((item, index) => (
-              <details key={index} className="group bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors">
-                  <span className="font-medium text-slate-900">{item.q}</span>
-                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="px-4 pb-4 text-slate-600 border-t border-slate-100">
-                  <p className="pt-4">{item.a}</p>
-                </div>
-              </details>
+            {faqData.map((item, index) => (
+              <FAQItem
+                key={index}
+                question={item.q}
+                answer={item.a}
+                isOpen={openFAQIndex === index}
+                onToggle={() => toggleFAQ(index)}
+              />
             ))}
           </div>
         </div>
@@ -1003,7 +1144,10 @@ export default function Home() {
                   {Object.entries(t.docs.sections).map(([key, label]) => (
                     <button
                       key={key}
-                      onClick={() => setActiveDocSection(key)}
+                      onClick={() => {
+                        setActiveDocSection(key)
+                        setOpenFAQIndex(null)
+                      }}
                       className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                         activeDocSection === key
                           ? 'bg-blue-600 text-white'
@@ -1060,6 +1204,8 @@ export default function Home() {
             
             <a
               href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=233d13bd84042877178c480d6eea2693"
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full text-center px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
             >
               {t.pricing.free.cta}
@@ -1093,6 +1239,8 @@ export default function Home() {
             
             <a
               href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=7a30291653991175793a84429218c2c7"
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full text-center px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/30"
             >
               {language === 'en' ? 'Add to Order' : 'أضف للطلب'}
@@ -1112,26 +1260,8 @@ export default function Home() {
           <p className="text-lg text-slate-600">{t.checkout.subtitle}</p>
         </div>
         
-        {/* Countdown Timer */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-4 mb-8 text-center text-white">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Timer className="w-5 h-5" />
-            <span className="font-semibold">{t.checkout.bump.urgency}</span>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-3xl font-bold font-mono">
-            <div className="bg-white/20 rounded-lg px-3 py-1">
-              {String(countdown.hours).padStart(2, '0')}
-            </div>
-            <span>:</span>
-            <div className="bg-white/20 rounded-lg px-3 py-1">
-              {String(countdown.minutes).padStart(2, '0')}
-            </div>
-            <span>:</span>
-            <div className="bg-white/20 rounded-lg px-3 py-1">
-              {String(countdown.seconds).padStart(2, '0')}
-            </div>
-          </div>
-        </div>
+        {/* Countdown Timer - Isolated component */}
+        <CountdownTimer language={language} />
         
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           {/* Order Summary */}
@@ -1201,6 +1331,8 @@ export default function Home() {
                 ? "https://infinityalgoacademy.net/checkout/?fct_cart_hash=7a30291653991175793a84429218c2c7"
                 : "https://infinityalgoacademy.net/checkout/?fct_cart_hash=233d13bd84042877178c480d6eea2693"
               }
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full text-center px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/30"
             >
               {language === 'en' ? 'Complete Order' : 'إتمام الطلب'}
@@ -1345,72 +1477,6 @@ export default function Home() {
     </section>
   )
 
-  // Footer Component
-  const footer = useMemo(() => (
-    <footer className="bg-slate-900 text-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold">InfinityAlgo Academy</span>
-            </div>
-            <p className="text-slate-400 mb-6 max-w-md">
-              {t.footer.description}
-            </p>
-            {/* Payment Methods */}
-            <div className="flex items-center gap-4">
-              <div className="px-4 py-2 bg-slate-800 rounded-lg flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-slate-400" />
-                <span className="text-sm font-medium">Stripe</span>
-              </div>
-              <div className="px-4 py-2 bg-slate-800 rounded-lg flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-slate-400" />
-                <span className="text-sm font-medium">PayPal</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Links */}
-          <div>
-            <h4 className="font-semibold mb-4">{t.footer.links.product}</h4>
-            <ul className="space-y-2">
-              <li><button onClick={() => setCurrentPage('home')} className="text-slate-400 hover:text-white transition-colors">{t.nav.home}</button></li>
-              <li><button onClick={() => setCurrentPage('features')} className="text-slate-400 hover:text-white transition-colors">{t.nav.features}</button></li>
-              <li><button onClick={() => setCurrentPage('docs')} className="text-slate-400 hover:text-white transition-colors">{t.nav.docs}</button></li>
-              <li><button onClick={() => setCurrentPage('pricing')} className="text-slate-400 hover:text-white transition-colors">{t.nav.pricing}</button></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">{t.footer.links.support}</h4>
-            <ul className="space-y-2">
-              <li><button onClick={() => setCurrentPage('contact')} className="text-slate-400 hover:text-white transition-colors">{t.nav.contact}</button></li>
-              <li><a href="https://infinityalgoacademy.net" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">{language === 'en' ? 'Visit Store' : 'زيارة المتجر'}</a></li>
-              <li><a href="https://infinityalgoacademy.net/item/mtf-screener-ma-cross-system/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">{language === 'en' ? 'Product Page' : 'صفحة المنتج'}</a></li>
-            </ul>
-          </div>
-        </div>
-        
-        {/* Bottom */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-slate-400 text-sm">{t.footer.copyright}</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-              {language === 'en' ? 'Privacy Policy' : 'سياسة الخصوصية'}
-            </a>
-            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-              {language === 'en' ? 'Terms of Service' : 'شروط الخدمة'}
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  ), [language, t.footer, currentPage])
-
   // Testimonials Section
   const TestimonialsSection = () => (
     <section className="py-20 bg-white">
@@ -1438,16 +1504,16 @@ export default function Home() {
               name: 'Sarah K.',
               role: language === 'en' ? 'Day Trader' : 'متداول يومي',
               content: language === 'en'
-                ? 'Finally, an indicator that doesn\'t repaint! The multi-timeframe confluence feature is genius. I\'ve tried many indicators, but this one actually delivers on its promises.'
-                : 'أخيراً، مؤشر لا يعيد الرسم! ميزة التوافق متعدد الأطر الزمنية عبقرية. جربت العديد من المؤشرات، لكن هذا فعلاً يفي بوعوده.',
+                ? 'I was skeptical at first because it\'s free, but this indicator rivals paid tools costing hundreds. The multi-symbol scanner alone is worth it. Highly recommend!'
+                : 'كنت متشككة في البداية لأنه مجاني، لكن هذا المؤشر ينافس أدوات مدفوعة تكلف مئات الدولارات. الماسح متعدد الرموز وحده يستحق العناء. أوصي به بشدة!',
               rating: 5
             },
             {
-              name: 'Michael R.',
-              role: language === 'en' ? 'Swing Trader' : 'متداول تأرجحي',
+              name: 'Mohammed R.',
+              role: language === 'en' ? 'Swing Trader' : 'متداول سوينغ',
               content: language === 'en'
-                ? 'The scanner alone is worth it - I can monitor 20+ pairs and never miss an opportunity. Plus, the free price is unbeatable. Best trading tool I\'ve ever downloaded.'
-                : 'الماسح وحده يستحق - يمكنني مراقبة أكثر من 20 زوج ولا أفوت أي فرصة. بالإضافة إلى أن السعر المجاني لا يقاوم. أفضل أداة تداول حملتها على الإطلاق.',
+                ? 'The best free indicator I\'ve ever used. Clean signals, no repainting, and the alerts work perfectly. Finally found a tool I can trust for my analysis.'
+                : 'أفضل مؤشر مجاني استخدمته على الإطلاق. إشارات واضحة، بدون إعادة رسم، والتنبيهات تعمل بشكل مثالي. أخيراً وجدت أداة يمكنني الوثوق بها لتحليلي.',
               rating: 5
             }
           ].map((testimonial, index) => (
@@ -1459,12 +1525,12 @@ export default function Home() {
               </div>
               <p className="text-slate-600 mb-4">{testimonial.content}</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white font-semibold">
                   {testimonial.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                  <div className="text-sm text-slate-500">{testimonial.role}</div>
+                  <h4 className="font-semibold text-slate-900">{testimonial.name}</h4>
+                  <p className="text-sm text-slate-500">{testimonial.role}</p>
                 </div>
               </div>
             </div>
@@ -1476,38 +1542,109 @@ export default function Home() {
 
   // CTA Section
   const CTASection = () => (
-    <section className="py-20 bg-gradient-to-r from-blue-600 to-emerald-600">
+    <section className="py-20 bg-gradient-to-r from-blue-600 to-emerald-500">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-          {language === 'en' ? 'Ready to Transform Your Trading?' : 'جاهز لتحويل تداولك؟'}
+          {language === 'en' ? 'Ready to Transform Your Trading?' : 'مستعد لتحويل تداولك؟'}
         </h2>
-        <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-          {language === 'en'
-            ? 'Join thousands of traders already using the MTF Screener MA Cross System. Download now for free and start making better trading decisions today.'
-            : 'انضم إلى آلاف المتداولين الذين يستخدمون بالفعل نظام MTF Screener MA Cross. حمل الآن مجاناً وابدأ في اتخاذ قرارات تداول أفضل اليوم.'}
+        <p className="text-xl text-white/90 mb-8">
+          {language === 'en' 
+            ? 'Join thousands of successful traders using MTF Screener MA Cross System'
+            : 'انضم إلى آلاف المتداولين الناجحين الذين يستخدمون نظام MTF Screener MA Cross'}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="https://infinityalgoacademy.net/checkout/?fct_cart_hash=233d13bd84042877178c480d6eea2693"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-blue-600 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-blue-600 font-bold text-lg hover:bg-blue-50 transition-all"
           >
             <Download className="w-5 h-5" />
-            {language === 'en' ? 'Download Free Now' : 'حمل مجاناً الآن'}
+            {language === 'en' ? 'Download Free Now' : 'حمّل مجاناً الآن'}
           </a>
           <button
-            onClick={() => setCurrentPage('checkout')}
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/10 text-white font-semibold border-2 border-white/30 hover:bg-white/20 transition-all"
+            onClick={() => handleNavClick('features')}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/20 text-white font-semibold hover:bg-white/30 transition-all border-2 border-white/30"
           >
-            {language === 'en' ? 'View Pricing' : 'عرض الأسعار'}
-            <ArrowRight className="w-5 h-5" />
+            <Eye className="w-5 h-5" />
+            {language === 'en' ? 'Learn More' : 'اعرف المزيد'}
           </button>
         </div>
       </div>
     </section>
   )
 
-  // Render page content
-  const renderPage = () => {
+  // Footer Component
+  const footer = useMemo(() => (
+    <footer className="bg-slate-900 text-white py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-4 gap-12 mb-12">
+          {/* Brand */}
+          <div className="md:col-span-2">
+            <button 
+              onClick={() => handleNavClick('home')}
+              className="flex items-center gap-3 mb-4 cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold">InfinityAlgo Academy</span>
+            </button>
+            <p className="text-slate-400 mb-6 max-w-md">
+              {t.footer.description}
+            </p>
+            {/* Payment Methods */}
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-slate-800 rounded-lg flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-slate-400" />
+                <span className="text-sm font-medium">Stripe</span>
+              </div>
+              <div className="px-4 py-2 bg-slate-800 rounded-lg flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-slate-400" />
+                <span className="text-sm font-medium">PayPal</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Links */}
+          <div>
+            <h4 className="font-semibold mb-4">{t.footer.links.product}</h4>
+            <ul className="space-y-2">
+              <li><button onClick={() => handleNavClick('home')} className="text-slate-400 hover:text-white transition-colors">{t.nav.home}</button></li>
+              <li><button onClick={() => handleNavClick('features')} className="text-slate-400 hover:text-white transition-colors">{t.nav.features}</button></li>
+              <li><button onClick={() => handleNavClick('docs')} className="text-slate-400 hover:text-white transition-colors">{t.nav.docs}</button></li>
+              <li><button onClick={() => handleNavClick('pricing')} className="text-slate-400 hover:text-white transition-colors">{t.nav.pricing}</button></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold mb-4">{t.footer.links.support}</h4>
+            <ul className="space-y-2">
+              <li><button onClick={() => handleNavClick('contact')} className="text-slate-400 hover:text-white transition-colors">{t.nav.contact}</button></li>
+              <li><a href="https://infinityalgoacademy.net" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">{language === 'en' ? 'Visit Store' : 'زيارة المتجر'}</a></li>
+              <li><a href="https://infinityalgoacademy.net/item/mtf-screener-ma-cross-system/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">{language === 'en' ? 'Product Page' : 'صفحة المنتج'}</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        {/* Bottom */}
+        <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-slate-400 text-sm">{t.footer.copyright}</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
+              {language === 'en' ? 'Privacy Policy' : 'سياسة الخصوصية'}
+            </a>
+            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
+              {language === 'en' ? 'Terms of Service' : 'شروط الخدمة'}
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  ), [language, t.footer, t.nav, handleNavClick])
+
+  // Page Content
+  const pageContent = useMemo(() => {
     switch (currentPage) {
       case 'home':
         return (
@@ -1515,50 +1652,40 @@ export default function Home() {
             <HeroSection />
             <StatsSection />
             <FeaturesSection />
+            <PlatformSection />
+            <BenefitsSection />
             <TestimonialsSection />
             <CTASection />
           </>
         )
       case 'features':
         return (
-          <div className="pt-24">
-            <FeaturesSection />
-          </div>
+          <>
+            <div className="pt-20">
+              <FeaturesSection />
+              <PlatformSection />
+              <BenefitsSection />
+            </div>
+          </>
         )
       case 'docs':
-        return (
-          <div className="pt-24">
-            <DocsSection />
-          </div>
-        )
+        return <div className="pt-20"><DocsSection /></div>
       case 'pricing':
-        return (
-          <div className="pt-24">
-            <PricingSection />
-          </div>
-        )
+        return <div className="pt-20"><PricingSection /></div>
       case 'checkout':
-        return (
-          <div className="pt-24">
-            <CheckoutSection />
-          </div>
-        )
+        return <div className="pt-20"><CheckoutSection /></div>
       case 'contact':
-        return (
-          <div className="pt-24">
-            <ContactSection />
-          </div>
-        )
+        return <div className="pt-20"><ContactSection /></div>
       default:
         return null
     }
-  }
+  }, [currentPage, activeDocSection, openFAQIndex, language, orderBumpChecked])
 
   return (
     <div className="min-h-screen bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
       {header}
       <main>
-        {renderPage()}
+        {pageContent}
       </main>
       {footer}
     </div>
