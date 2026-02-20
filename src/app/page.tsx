@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { 
   ChevronDown, 
@@ -335,6 +335,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [orderBumpChecked, setOrderBumpChecked] = useState(false)
   const [countdown, setCountdown] = useState({ hours: 23, minutes: 59, seconds: 59 })
+  const [activeDocSection, setActiveDocSection] = useState('overview')
 
   const t = translations[language]
   const isRTL = language === 'ar'
@@ -369,7 +370,7 @@ export default function Home() {
   }
 
   // Header Component
-  const Header = () => (
+  const header = useMemo(() => (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -439,7 +440,7 @@ export default function Home() {
         )}
       </div>
     </header>
-  )
+  ), [currentPage, language, mobileMenuOpen])
 
   // Hero Section
   const HeroSection = () => (
@@ -577,8 +578,6 @@ export default function Home() {
 
   // Documentation Section
   const DocsSection = () => {
-    const [activeSection, setActiveSection] = useState('overview')
-    
     const faqItems = [
       {
         q: language === 'en' ? 'What is MTF Screener MA Cross System?' : 'ما هو نظام MTF Screener MA Cross؟',
@@ -1004,9 +1003,9 @@ export default function Home() {
                   {Object.entries(t.docs.sections).map(([key, label]) => (
                     <button
                       key={key}
-                      onClick={() => setActiveSection(key)}
+                      onClick={() => setActiveDocSection(key)}
                       className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                        activeSection === key
+                        activeDocSection === key
                           ? 'bg-blue-600 text-white'
                           : 'text-slate-600 hover:bg-slate-100'
                       }`}
@@ -1020,7 +1019,7 @@ export default function Home() {
             
             {/* Content */}
             <div className="flex-1 min-w-0">
-              {sections[activeSection as keyof typeof sections]}
+              {sections[activeDocSection as keyof typeof sections]}
             </div>
           </div>
         </div>
@@ -1347,7 +1346,7 @@ export default function Home() {
   )
 
   // Footer Component
-  const Footer = () => (
+  const footer = useMemo(() => (
     <footer className="bg-slate-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
@@ -1410,7 +1409,7 @@ export default function Home() {
         </div>
       </div>
     </footer>
-  )
+  ), [language, t.footer, currentPage])
 
   // Testimonials Section
   const TestimonialsSection = () => (
@@ -1522,11 +1521,9 @@ export default function Home() {
         )
       case 'features':
         return (
-          <>
-            <div className="pt-24">
-              <FeaturesSection />
-            </div>
-          </>
+          <div className="pt-24">
+            <FeaturesSection />
+          </div>
         )
       case 'docs':
         return (
@@ -1559,11 +1556,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
-      <Header />
+      {header}
       <main>
         {renderPage()}
       </main>
-      <Footer />
+      {footer}
     </div>
   )
 }
